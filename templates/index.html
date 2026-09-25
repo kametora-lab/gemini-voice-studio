@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gemini 3.8 Voice Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap');
+    body {
+      font-family: 'Inter', 'Noto Sans JP', sans-serif;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #1e293b;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #475569;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+  <div class="max-w-6xl mx-auto px-4 py-8">
+    
+    <!-- Header -->
+    <header class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800 pb-6 mb-8 gap-4">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/30">
+          <i class="fa-solid fa-wand-magic-sparkles text-lg"></i>
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">Gemini 3.8 Voice Studio</h1>
+          <p class="text-xs text-slate-400">Gemini 3.8 Flash TTS / 表現力音声 &amp; ボイスレプリケーション（声の複製）</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-3">
+        <button onclick="openRecordModal()" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white shadow-lg shadow-pink-600/20 flex items-center gap-2 transition cursor-pointer">
+          <i class="fa-solid fa-microphone-lines text-sm animate-pulse"></i>
+          自分の声を録音・登録
+        </button>
+        <span class="inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
+          無料枠で動作中
+        </span>
+      </div>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      
+      <!-- Main Left: Input & Controls (7 cols) -->
+      <div class="lg:col-span-7 space-y-6">
+        
+        <!-- Text Input Card -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl backdrop-blur-sm">
+          <div class="flex items-center justify-between mb-3">
+            <label for="scriptText" class="font-semibold text-slate-200 flex items-center gap-2">
+              <i class="fa-solid fa-align-left text-indigo-400"></i>
+              セリフ・原稿の入力
+            </label>
+            <span id="charCount" class="text-xs text-slate-400">0 文字</span>
+          </div>
+
+          <!-- Quick Tag Buttons Toolbar -->
+          <div class="mb-3">
+            <div class="text-xs text-slate-400 mb-2 font-medium flex items-center justify-between">
+              <span>🎭 感情・演技タグ（選択した文字を囲む / クリックで挿入）:</span>
+              <button onclick="clearText()" class="text-slate-400 hover:text-slate-200 transition text-xs">
+                <i class="fa-regular fa-trash-can mr-1"></i>クリア
+              </button>
+            </div>
+            <div class="flex flex-wrap gap-1.5">
+              <button onclick="insertTag('laugh')" class="tag-btn px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-amber-500/20 text-amber-300 border border-slate-700 hover:border-amber-500/40 transition flex items-center gap-1">
+                <span>😆</span> 笑い <code>&lt;laugh&gt;</code>
+              </button>
+              <button onclick="insertTag('sigh')" class="tag-btn px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-sky-500/20 text-sky-300 border border-slate-700 hover:border-sky-500/40 transition flex items-center gap-1">
+                <span>😮‍💨</span> ため息 <code>&lt;sigh&gt;</code>
+              </button>
+              <button onclick="insertTag('whisper')" class="tag-btn px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-purple-500/20 text-purple-300 border border-slate-700 hover:border-purple-500/40 transition flex items-center gap-1">
+                <span>🤫</span> ささやき <code>&lt;whisper&gt;</code>
+              </button>
+              <button onclick="insertTag('excited')" class="tag-btn px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-rose-500/20 text-rose-300 border border-slate-700 hover:border-rose-500/40 transition flex items-center gap-1">
+                <span>🔥</span> 興奮 <code>&lt;excited&gt;</code>
+              </button>
+              <button onclick="insertTag('gasp')" class="tag-btn px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-orange-500/20 text-orange-300 border border-slate-700 hover:border-orange-500/40 transition flex items-center gap-1">
+                <span>😨</span> 息をのむ <code>&lt;gasp&gt;</code>
+              </button>
+              <button onclick="insertTag('sad')" class="tag-btn px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-indigo-500/20 text-indigo-300 border border-slate-700 hover:border-indigo-500/40 transition flex items-center gap-1">
+                <span>😢</span> 悲しみ <code>&lt;sad&gt;</code>
+              </button>
+              <button onclick="insertText('<short pause>')" class="tag-btn px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-teal-500/20 text-teal-300 border border-slate-700 hover:border-teal-500/40 transition flex items-center gap-1">
+                <span>⏱️</span> 間 <code>&lt;pause&gt;</code>
+              </button>
+            </div>
+          </div>
+
+          <!-- Textarea -->
+          <textarea id="scriptText" rows="7" 
+            placeholder="ここに喋らせたいテキストを入力してください。&#10;感情タグを使って表現力豊かに喋らせることもできます！&#10;例: 今日の発表、<laugh>緊張したけどすっごく楽しかったよ！</laugh>"
+            class="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl p-4 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition leading-relaxed custom-scrollbar text-sm"
+          ></textarea>
+
+          <!-- Preset Samples -->
+          <div class="mt-3 flex items-center gap-2 overflow-x-auto pb-1 text-xs text-slate-400">
+            <span class="whitespace-nowrap"><i class="fa-solid fa-lightbulb text-amber-400 mr-1"></i>サンプル:</span>
+            <button onclick="loadSample('cheerful')" class="whitespace-nowrap px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition">元気・笑顔</button>
+            <button onclick="loadSample('sigh')" class="whitespace-nowrap px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition">ため息と安心</button>
+            <button onclick="loadSample('whisper')" class="whitespace-nowrap px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition">ひそひそ話</button>
+            <button onclick="loadSample('narration')" class="whitespace-nowrap px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition">解説・朗読</button>
+          </div>
+        </div>
+
+        <!-- Voice & Model Settings -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl backdrop-blur-sm space-y-5">
+          
+          <!-- Character Voice Selection -->
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <label class="font-semibold text-slate-200 flex items-center gap-2">
+                <i class="fa-solid fa-user-astronaut text-purple-400"></i>
+                キャラクター（声の選択）
+              </label>
+              <button onclick="openRecordModal()" class="text-xs text-pink-400 hover:text-pink-300 flex items-center gap-1">
+                <i class="fa-solid fa-plus-circle"></i>
+                自分の声を追加
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="voiceCards">
+              {% for voice in voices %}
+              <div onclick="selectVoice('{{ voice.id }}')" id="voice-card-{{ voice.id }}" 
+                class="voice-card cursor-pointer p-3.5 rounded-xl border {% if voice.is_custom %}border-pink-500/40 bg-pink-950/20 hover:border-pink-500{% else %}border-slate-800 bg-slate-950/60 hover:border-slate-600{% endif %} transition relative group">
+                <div class="flex items-start justify-between">
+                  <div class="font-bold text-sm text-slate-200 group-hover:text-indigo-400 transition flex items-center gap-1.5">
+                    {% if voice.is_custom %}
+                    <i class="fa-solid fa-microphone-lines text-pink-400 text-xs"></i>
+                    {% endif %}
+                    {{ voice.name }}
+                  </div>
+                  <div class="flex items-center gap-1">
+                    <span class="text-[11px] px-2 py-0.5 rounded-full {% if voice.is_custom %}bg-pink-500/20 text-pink-300 font-semibold{% else %}bg-slate-800 text-slate-400{% endif %}">
+                      {{ voice.gender }}
+                    </span>
+                    {% if voice.is_custom %}
+                    <button onclick="event.stopPropagation(); deleteCustomVoice('{{ voice.id }}');" title="削除" class="text-slate-500 hover:text-rose-400 p-1 text-xs transition">
+                      <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="text-xs {% if voice.is_custom %}text-pink-400{% else %}text-indigo-400/90{% endif %} font-medium mt-1">{{ voice.tone }}</div>
+                <div class="text-[11px] text-slate-400 mt-1 leading-snug">{{ voice.desc }}</div>
+                <div class="selected-indicator absolute top-3 right-3 text-indigo-400 hidden">
+                  <i class="fa-solid fa-circle-check text-base"></i>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+            <input type="hidden" id="selectedVoice" value="Puck">
+          </div>
+
+          <!-- Model Selection -->
+          <div class="pt-2 border-t border-slate-800/80">
+            <label class="font-semibold text-slate-200 mb-2 block text-xs flex items-center gap-2">
+              <i class="fa-solid fa-microchip text-slate-400"></i>
+              モデル選択
+            </label>
+            <div class="grid grid-cols-2 gap-3">
+              <label class="cursor-pointer border border-slate-800 bg-slate-950/60 p-3 rounded-xl flex items-center gap-3 hover:border-slate-700 transition">
+                <input type="radio" name="model" value="gemini-3.8-flash-tts" checked class="text-indigo-600 focus:ring-indigo-500">
+                <div>
+                  <div class="text-xs font-bold text-slate-200">Gemini 3.8 Flash TTS</div>
+                  <div class="text-[10px] text-slate-400">高音質・豊かな演技・推奨</div>
+                </div>
+              </label>
+              <label class="cursor-pointer border border-slate-800 bg-slate-950/60 p-3 rounded-xl flex items-center gap-3 hover:border-slate-700 transition">
+                <input type="radio" name="model" value="gemini-3.8-flash-lite-tts" class="text-indigo-600 focus:ring-indigo-500">
+                <div>
+                  <div class="text-xs font-bold text-slate-200">Gemini 3.8 Flash-Lite TTS</div>
+                  <div class="text-[10px] text-slate-400">超高速・低レイテンシ</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Action Button -->
+          <div class="pt-2">
+            <button id="generateBtn" onclick="generateAudio()" 
+              class="w-full py-4 rounded-xl font-bold text-base text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 shadow-lg shadow-indigo-600/30 active:scale-[0.99] transition duration-200 flex items-center justify-center gap-2 cursor-pointer">
+              <i class="fa-solid fa-volume-high text-lg"></i>
+              <span id="btnText">音声を生成する</span>
+              <span class="text-xs opacity-75 font-normal ml-1">(Ctrl + Enter)</span>
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Right Column: Player & History (5 cols) -->
+      <div class="lg:col-span-5 space-y-6">
+        
+        <!-- Live Player Card -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl backdrop-blur-sm">
+          <h2 class="font-semibold text-slate-200 mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-circle-play text-pink-400"></i>
+            生成された音声
+          </h2>
+
+          <!-- Empty State -->
+          <div id="playerEmpty" class="py-12 flex flex-col items-center justify-center text-center text-slate-500 border border-dashed border-slate-800 rounded-xl">
+            <div class="w-12 h-12 rounded-full bg-slate-800/80 flex items-center justify-center mb-3 text-slate-400">
+              <i class="fa-solid fa-music text-xl"></i>
+            </div>
+            <p class="text-sm font-medium">まだ音声が生成されていません</p>
+            <p class="text-xs text-slate-600 mt-1">セリフを入力して「音声を生成する」を押してください</p>
+          </div>
+
+          <!-- Active Player Box -->
+          <div id="playerActive" class="hidden space-y-4">
+            <div class="p-4 rounded-xl bg-slate-950 border border-slate-800">
+              <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
+                <span id="activeVoiceBadge" class="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-medium">Puck</span>
+                <span id="activeModelBadge" class="text-slate-500 text-[10px]">Gemini 3.8 Flash TTS</span>
+              </div>
+              <p id="activeTextPreview" class="text-xs text-slate-300 line-clamp-3 mb-4 italic bg-slate-900/50 p-2.5 rounded-lg border border-slate-800/50">
+                テキスト
+              </p>
+              
+              <!-- Audio Element -->
+              <audio id="mainAudio" controls class="w-full custom-audio focus:outline-none mb-3"></audio>
+
+              <div class="flex items-center justify-between pt-2 border-t border-slate-800/80">
+                <a id="downloadLink" href="#" download class="inline-flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 font-medium">
+                  <i class="fa-solid fa-arrow-down-to-line"></i>
+                  WAVファイルをダウンロード
+                </a>
+                <span id="activeTime" class="text-[11px] text-slate-500"></span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- History Card -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl backdrop-blur-sm">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="font-semibold text-slate-200 flex items-center gap-2 text-sm">
+              <i class="fa-solid fa-clock-rotate-left text-slate-400"></i>
+              生成履歴
+            </h2>
+            <button onclick="clearHistory()" class="text-xs text-slate-500 hover:text-slate-300 transition">
+              履歴クリア
+            </button>
+          </div>
+          
+          <div id="historyList" class="space-y-2.5 max-h-[360px] overflow-y-auto pr-1 custom-scrollbar text-xs">
+            <div class="text-slate-500 text-center py-6">履歴はありません</div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Voice Replication Modal -->
+  <div id="recordModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700/80 rounded-2xl max-w-xl w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scrollbar">
+      
+      <!-- Close Button -->
+      <button onclick="closeRecordModal()" class="absolute top-5 right-5 text-slate-400 hover:text-white transition">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <!-- Modal Header -->
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-xl bg-pink-500/20 text-pink-400 flex items-center justify-center">
+          <i class="fa-solid fa-microphone-lines text-lg"></i>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-white">自分の声を録音してボイス作成</h3>
+          <p class="text-xs text-slate-400">Gemini Voice Replication（音声複製機能）</p>
+        </div>
+      </div>
+
+      <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-3.5 mb-5 text-xs text-slate-300 leading-relaxed">
+        <i class="fa-solid fa-shield-halved text-emerald-400 mr-1.5"></i>
+        <strong>安全のための2ステップ録音:</strong><br>
+        GoogleのAI規定により、他人の声の無断複製を防ぐため、<strong>①あなたの声サンプル</strong>と<strong>②同意文の読み上げ</strong>の2つを録音します。
+      </div>
+
+      <!-- Step 1: Reference Audio -->
+      <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-4 mb-4">
+        <div class="flex items-center justify-between mb-2">
+          <span class="font-bold text-xs text-slate-200 flex items-center gap-1.5">
+            <span class="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[11px]">1</span>
+            あなたの声サンプル（10〜30秒間）
+          </span>
+          <span id="sourceTimer" class="text-xs font-mono text-slate-400">00:00 / 00:15+</span>
+        </div>
+        <div class="text-[11px] text-slate-400 mb-3 bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 italic">
+          💡 <strong>読み上げテキスト例（普段の話し声で読んでください）:</strong><br>
+          「こんにちは。今日はとても良い天気ですね。Geminiの最新の音声合成モデルを試しています。私の声がどのように再現されるのか、今からとても楽しみです。」
+        </div>
+        <div class="flex items-center gap-3">
+          <button id="btnRecSource" onclick="toggleRecord('source')" class="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium flex items-center gap-2 transition">
+            <i class="fa-solid fa-microphone text-xs"></i>
+            <span>録音を開始</span>
+          </button>
+          <audio id="sourceAudioPreview" controls class="h-8 flex-1 hidden"></audio>
+          <span id="sourceStatus" class="text-xs text-slate-400">未録音</span>
+        </div>
+      </div>
+
+      <!-- Step 2: Consent Audio -->
+      <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-4 mb-4">
+        <div class="flex items-center justify-between mb-2">
+          <span class="font-bold text-xs text-slate-200 flex items-center gap-1.5">
+            <span class="w-5 h-5 rounded-full bg-pink-600 text-white flex items-center justify-center text-[11px]">2</span>
+            同意文の録音（本人確認・必須）
+          </span>
+          <span id="consentTimer" class="text-xs font-mono text-slate-400">00:00</span>
+        </div>
+        <div class="text-xs text-pink-300/90 mb-3 bg-pink-950/20 p-2.5 rounded-lg border border-pink-500/20 font-medium">
+          🎙️ <strong>マイクに向かって以下の文章をそのまま読み上げてください:</strong><br>
+          <span class="text-white font-bold block mt-1">「私はこの音声の所有者であり、Google がこの音声を使用して合成音声モデルを作成することに同意します。」</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <button id="btnRecConsent" onclick="toggleRecord('consent')" class="px-3.5 py-1.5 rounded-lg bg-pink-600 hover:bg-pink-500 text-white text-xs font-medium flex items-center gap-2 transition">
+            <i class="fa-solid fa-microphone text-xs"></i>
+            <span>録音を開始</span>
+          </button>
+          <audio id="consentAudioPreview" controls class="h-8 flex-1 hidden"></audio>
+          <span id="consentStatus" class="text-xs text-slate-400">未録音</span>
+        </div>
+      </div>
+
+      <!-- Step 3: Name & Create -->
+      <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-4 mb-5">
+        <label for="customVoiceName" class="block font-bold text-xs text-slate-200 mb-1.5">
+          ボイスの表示名:
+        </label>
+        <input type="text" id="customVoiceName" value="私の声" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-pink-500">
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center justify-end gap-3">
+        <button onclick="closeRecordModal()" class="px-4 py-2 rounded-xl text-xs text-slate-400 hover:text-white transition">
+          キャンセル
+        </button>
+        <button id="btnSubmitVoice" onclick="submitReplicateVoice()" 
+          class="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-pink-600 to-indigo-600 hover:from-pink-500 hover:to-indigo-500 shadow-lg shadow-pink-600/30 transition flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          <span>ボイスを作成して登録</span>
+        </button>
+      </div>
+
+      <!-- Progress Overlay -->
+      <div id="replicateLoading" class="absolute inset-0 bg-slate-950/90 rounded-2xl hidden flex flex-col items-center justify-center p-6 text-center z-10">
+        <div class="w-12 h-12 rounded-full border-4 border-pink-500/20 border-t-pink-500 animate-spin mb-4"></div>
+        <div class="font-bold text-sm text-slate-100 mb-1">Google AI にボイスを登録中...</div>
+        <div class="text-xs text-slate-400">音声照合とモデルの作成を行っています（約10〜20秒かかります）</div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let currentVoice = 'Puck';
+    let historyItems = [];
+
+    const samples = {
+      cheerful: "皆さん、こんにちは！<laugh>今日から新しいプロジェクトが始まります！</laugh> 一緒に最高の作品を作っていきましょうね！",
+      sigh: "ふぅ…<sigh>やっと一息つけました。</sigh> 今日は本当に濃い一日でしたね。<laugh>でもすごく充実していました！</laugh>",
+      whisper: "ねえ、ここだけの話なんだけど…<whisper>実はあっちの部屋に、とんでもない秘密があるみたいなんだ…</whisper>誰にも言わないでね？",
+      narration: "星空を見上げると、無数の光が語りかけてくるようです。<short pause>古代の人々も、同じ星を見つめながら物語を紡ぎました。"
+    };
+
+    function selectVoice(id) {
+      currentVoice = id;
+      document.getElementById('selectedVoice').value = id;
+      
+      document.querySelectorAll('.voice-card').forEach(card => {
+        card.classList.remove('border-indigo-500', 'bg-indigo-950/30', 'border-pink-500', 'bg-pink-950/30');
+        const indicator = card.querySelector('.selected-indicator');
+        if (indicator) indicator.classList.add('hidden');
+      });
+
+      const selectedCard = document.getElementById(`voice-card-${id}`);
+      if (selectedCard) {
+        selectedCard.classList.add('border-indigo-500', 'bg-indigo-950/30');
+        const indicator = selectedCard.querySelector('.selected-indicator');
+        if (indicator) indicator.classList.remove('hidden');
+      }
+    }
+
+    function insertTag(tag) {
+      const textarea = document.getElementById('scriptText');
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const text = textarea.value;
+      const selected = text.substring(start, end);
+
+      const openTag = `<${tag}>`;
+      const closeTag = `</${tag}>`;
+      let replacement = '';
+      let newCursorPos = 0;
+
+      if (selected.length > 0) {
+        replacement = openTag + selected + closeTag;
+        newCursorPos = start + replacement.length;
+      } else {
+        replacement = openTag + closeTag;
+        newCursorPos = start + openTag.length;
+      }
+
+      textarea.value = text.substring(0, start) + replacement + text.substring(end);
+      textarea.focus();
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
+      updateCharCount();
+    }
+
+    function insertText(textToInsert) {
+      const textarea = document.getElementById('scriptText');
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const text = textarea.value;
+
+      textarea.value = text.substring(0, start) + textToInsert + text.substring(end);
+      textarea.focus();
+      const pos = start + textToInsert.length;
+      textarea.setSelectionRange(pos, pos);
+      updateCharCount();
+    }
+
+    function loadSample(key) {
+      const textarea = document.getElementById('scriptText');
+      textarea.value = samples[key] || '';
+      updateCharCount();
+    }
+
+    function clearText() {
+      const textarea = document.getElementById('scriptText');
+      textarea.value = '';
+      updateCharCount();
+    }
+
+    function updateCharCount() {
+      const textarea = document.getElementById('scriptText');
+      document.getElementById('charCount').textContent = `${textarea.value.length} 文字`;
+    }
+
+    document.getElementById('scriptText').addEventListener('input', updateCharCount);
+
+    // Ctrl + Enter to generate
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        generateAudio();
+      }
+    });
+
+    async function generateAudio() {
+      const text = document.getElementById('scriptText').value.trim();
+      if (!text) {
+        alert("セリフ・原稿を入力してください。");
+        return;
+      }
+
+      const voice = document.getElementById('selectedVoice').value;
+      const model = document.querySelector('input[name="model"]:checked').value;
+      const btn = document.getElementById('generateBtn');
+      const btnText = document.getElementById('btnText');
+
+      btn.disabled = true;
+      btn.classList.add('opacity-75', 'cursor-not-allowed');
+      btnText.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>音声を生成中...';
+
+      try {
+        const response = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, voice, model })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          // Play audio
+          document.getElementById('playerEmpty').classList.add('hidden');
+          document.getElementById('playerActive').classList.remove('hidden');
+
+          const audio = document.getElementById('mainAudio');
+          audio.src = data.audio_url;
+          audio.play().catch(e => console.log('Autoplay prevented:', e));
+
+          document.getElementById('activeVoiceBadge').textContent = data.voice;
+          document.getElementById('activeModelBadge').textContent = data.model;
+          document.getElementById('activeTextPreview').textContent = data.text;
+          document.getElementById('activeTime').textContent = data.timestamp;
+
+          const downloadLink = document.getElementById('downloadLink');
+          downloadLink.href = data.audio_url;
+          downloadLink.download = data.filename;
+
+          // Add to history
+          addToHistory(data);
+        } else {
+          alert('エラー: ' + (data.error || '生成に失敗しました。'));
+        }
+      } catch (err) {
+        alert('通信エラーが発生しました: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('opacity-75', 'cursor-not-allowed');
+        btnText.innerHTML = '音声を生成する';
+      }
+    }
+
+    function addToHistory(item) {
+      historyItems.unshift(item);
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const container = document.getElementById('historyList');
+      if (historyItems.length === 0) {
+        container.innerHTML = '<div class="text-slate-500 text-center py-6">履歴はありません</div>';
+        return;
+      }
+
+      container.innerHTML = historyItems.map((item, idx) => `
+        <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-slate-700 transition flex items-center justify-between gap-3">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-semibold text-[10px]">${item.voice}</span>
+              <span class="text-[10px] text-slate-500">${item.timestamp}</span>
+            </div>
+            <p class="text-slate-300 truncate text-[11px]">${item.text}</p>
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button onclick="playHistoryAudio('${item.audio_url}', '${item.voice}', '${encodeURIComponent(item.text)}')" 
+              class="w-7 h-7 rounded-lg bg-indigo-600/30 hover:bg-indigo-600 text-indigo-200 hover:text-white flex items-center justify-center transition" title="再生">
+              <i class="fa-solid fa-play text-xs"></i>
+            </button>
+            <a href="${item.audio_url}" download="${item.filename}" 
+              class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition" title="ダウンロード">
+              <i class="fa-solid fa-download text-xs"></i>
+            </a>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function playHistoryAudio(url, voice, encodedText) {
+      const audio = document.getElementById('mainAudio');
+      audio.src = url;
+      audio.play();
+
+      document.getElementById('playerEmpty').classList.add('hidden');
+      document.getElementById('playerActive').classList.remove('hidden');
+      document.getElementById('activeVoiceBadge').textContent = voice;
+      document.getElementById('activeTextPreview').textContent = decodeURIComponent(encodedText);
+    }
+
+    function clearHistory() {
+      historyItems = [];
+      renderHistory();
+    }
+
+    async function deleteCustomVoice(id) {
+      if (!confirm('このカスタムボイスを削除しますか？')) return;
+      try {
+        await fetch(`/api/voices/${id}`, { method: 'DELETE' });
+        location.reload();
+      } catch (e) {
+        alert('削除に失敗しました: ' + e.message);
+      }
+    }
+
+    // ==========================================
+    // Voice Replication (Recording) Logic
+    // ==========================================
+    let isRecording = false;
+    let recordingType = null; // 'source' or 'consent'
+    let audioContext = null;
+    let mediaStream = null;
+    let scriptProcessor = null;
+    let audioBuffers = [];
+    let recordStartTime = 0;
+    let recordTimerInterval = null;
+
+    let sourceWavB64 = null;
+    let consentWavB64 = null;
+
+    function openRecordModal() {
+      document.getElementById('recordModal').classList.remove('hidden');
+    }
+
+    function closeRecordModal() {
+      if (isRecording) stopRecording();
+      document.getElementById('recordModal').classList.add('hidden');
+    }
+
+    async function toggleRecord(type) {
+      if (isRecording) {
+        if (recordingType === type) {
+          stopRecording();
+        } else {
+          stopRecording();
+          setTimeout(() => startRecording(type), 300);
+        }
+      } else {
+        startRecording(type);
+      }
+    }
+
+    async function startRecording(type) {
+      recordingType = type;
+      audioBuffers = [];
+
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({ 
+          audio: { channelCount: 1, sampleRate: 24000, echoCancellation: true, noiseSuppression: true } 
+        });
+
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        audioContext = new AudioContextClass({ sampleRate: 24000 });
+        const source = audioContext.createMediaStreamSource(mediaStream);
+
+        // Buffer size 4096, 1 input channel, 1 output channel
+        scriptProcessor = audioContext.createScriptProcessor(4096, 1, 1);
+        scriptProcessor.onaudioprocess = (e) => {
+          if (!isRecording) return;
+          const inputData = e.inputBuffer.getChannelData(0);
+          audioBuffers.push(new Float32Array(inputData));
+        };
+
+        source.connect(scriptProcessor);
+        scriptProcessor.connect(audioContext.destination);
+
+        isRecording = true;
+        recordStartTime = Date.now();
+
+        // Update UI
+        const btn = document.getElementById(type === 'source' ? 'btnRecSource' : 'btnRecConsent');
+        btn.classList.add('bg-rose-600', 'animate-pulse');
+        btn.querySelector('span').textContent = '録音を停止';
+
+        const timerEl = document.getElementById(type === 'source' ? 'sourceTimer' : 'consentTimer');
+        const statusEl = document.getElementById(type === 'source' ? 'sourceStatus' : 'consentStatus');
+        statusEl.textContent = '録音中...';
+        statusEl.className = 'text-xs text-rose-400 font-bold';
+
+        recordTimerInterval = setInterval(() => {
+          const elapsedSec = Math.floor((Date.now() - recordStartTime) / 1000);
+          const mm = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
+          const ss = String(elapsedSec % 60).padStart(2, '0');
+          if (type === 'source') {
+            timerEl.textContent = `${mm}:${ss} / 00:15+ (推奨10~30秒)`;
+            if (elapsedSec >= 10) {
+              timerEl.classList.add('text-emerald-400');
+            }
+          } else {
+            timerEl.textContent = `${mm}:${ss}`;
+          }
+        }, 500);
+
+      } catch (err) {
+        alert('マイクの初期化に失敗しました: ' + err.message + '\nブラウザのマイク権限を許可してください。');
+      }
+    }
+
+    function stopRecording() {
+      if (!isRecording) return;
+      isRecording = false;
+      clearInterval(recordTimerInterval);
+
+      if (scriptProcessor) scriptProcessor.disconnect();
+      if (mediaStream) mediaStream.getTracks().forEach(t => t.stop());
+      const sampleRate = audioContext ? audioContext.sampleRate : 24000;
+      if (audioContext && audioContext.state !== 'closed') audioContext.close();
+
+      const type = recordingType;
+      const btn = document.getElementById(type === 'source' ? 'btnRecSource' : 'btnRecConsent');
+      btn.classList.remove('bg-rose-600', 'animate-pulse');
+      btn.querySelector('span').textContent = '再録音する';
+
+      // Flatten buffers
+      let totalLength = 0;
+      for (const b of audioBuffers) totalLength += b.length;
+      const mergedSamples = new Float32Array(totalLength);
+      let offset = 0;
+      for (const b of audioBuffers) {
+        mergedSamples.set(b, offset);
+        offset += b.length;
+      }
+
+      // Encode to 16-bit PCM WAV
+      const wavBlob = encodeWAV(mergedSamples, sampleRate);
+      const audioUrl = URL.createObjectURL(wavBlob);
+
+      const preview = document.getElementById(type === 'source' ? 'sourceAudioPreview' : 'consentAudioPreview');
+      preview.src = audioUrl;
+      preview.classList.remove('hidden');
+
+      const statusEl = document.getElementById(type === 'source' ? 'sourceStatus' : 'consentStatus');
+      const durationSec = (totalLength / sampleRate).toFixed(1);
+      statusEl.textContent = `録音完了 (${durationSec}秒)`;
+      statusEl.className = 'text-xs text-emerald-400 font-semibold';
+
+      // Convert to Base64
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const b64 = reader.result.split(',')[1];
+        if (type === 'source') {
+          sourceWavB64 = b64;
+        } else {
+          consentWavB64 = b64;
+        }
+      };
+      reader.readAsDataURL(wavBlob);
+    }
+
+    // Pure JS 16-bit Mono WAV Encoder
+    function encodeWAV(samples, sampleRate) {
+      const buffer = new ArrayBuffer(44 + samples.length * 2);
+      const view = new DataView(buffer);
+
+      function writeString(offset, string) {
+        for (let i = 0; i < string.length; i++) {
+          view.setUint8(offset + i, string.charCodeAt(i));
+        }
+      }
+
+      writeString(0, 'RIFF');
+      view.setUint32(4, 36 + samples.length * 2, true);
+      writeString(8, 'WAVE');
+      writeString(12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true); // PCM
+      view.setUint16(22, 1, true); // Mono
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * 2, true);
+      view.setUint16(32, 2, true); // Block align
+      view.setUint16(34, 16, true); // 16-bit
+      writeString(36, 'data');
+      view.setUint32(40, samples.length * 2, true);
+
+      // Write PCM
+      let index = 44;
+      for (let i = 0; i < samples.length; i++) {
+        let s = Math.max(-1, Math.min(1, samples[i]));
+        view.setInt16(index, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+        index += 2;
+      }
+
+      return new Blob([buffer], { type: 'audio/wav' });
+    }
+
+    async function submitReplicateVoice() {
+      if (!sourceWavB64) {
+        alert('ステップ1の「あなたの声サンプル」を録音してください（10秒以上推奨）。');
+        return;
+      }
+      if (!consentWavB64) {
+        alert('ステップ2の「同意文の録音」を行ってください。');
+        return;
+      }
+
+      const name = document.getElementById('customVoiceName').value.trim() || '私の声';
+      const loading = document.getElementById('replicateLoading');
+      loading.classList.remove('hidden');
+
+      try {
+        const res = await fetch('/api/voices/replicate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            display_name: name,
+            source_audio_b64: sourceWavB64,
+            consent_audio_b64: consentWavB64
+          })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          alert(`おめでとうございます！ボイス「${name}」の作成に成功しました！`);
+          location.reload(); // Reload to show the new voice card
+        } else {
+          alert('ボイス作成に失敗しました:\n' + (data.error || '不明なエラー'));
+        }
+      } catch (err) {
+        alert('通信エラーが発生しました: ' + err.message);
+      } finally {
+        loading.classList.add('hidden');
+      }
+    }
+
+    // Initialize default voice selection
+    selectVoice('Puck');
+    loadSample('cheerful');
+  </script>
+</body>
+</html>
