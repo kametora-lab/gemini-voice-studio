@@ -1,0 +1,27 @@
+# Environment variables & API keys (CRITICAL: Do NOT commit!)
+.env
+.env.*
+!.env.example
+
+# Audio files
+*.wav
+static/audio/*.wav
+!static/audio/.gitkeep
+custom_voices.json
+
+# Python cache & virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# IDE & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

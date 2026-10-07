@@ -31,7 +31,7 @@ Googleの最新音声生成モデル **Gemini 3.8 Flash TTS** および **Gemini
 
 ### 1. リポジトリをクローン
 ```bash
-git clone https://github.com/YOUR_USERNAME/gemini-voice-studio.git
+git clone https://github.com/kametora-lab/gemini-voice-studio.git
 cd gemini-voice-studio
 ```
 

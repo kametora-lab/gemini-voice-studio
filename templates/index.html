@@ -77,6 +77,9 @@
               <button onclick="insertTag('laugh')" class="tag-btn px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-amber-500/20 text-amber-300 border border-slate-700 hover:border-amber-500/40 transition flex items-center gap-1">
                 <span>😆</span> 笑い <code>&lt;laugh&gt;</code>
               </button>
+              <button onclick="insertTag('angry')" class="tag-btn px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-red-500/20 text-red-400 border border-slate-700 hover:border-red-500/40 transition flex items-center gap-1">
+                <span>💢</span> 激おこ <code>&lt;angry&gt;</code>
+              </button>
               <button onclick="insertTag('sigh')" class="tag-btn px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-sky-500/20 text-sky-300 border border-slate-700 hover:border-sky-500/40 transition flex items-center gap-1">
                 <span>😮‍💨</span> ため息 <code>&lt;sigh&gt;</code>
               </button>
@@ -108,6 +111,7 @@
           <div class="mt-3 flex items-center gap-2 overflow-x-auto pb-1 text-xs text-slate-400">
             <span class="whitespace-nowrap"><i class="fa-solid fa-lightbulb text-amber-400 mr-1"></i>サンプル:</span>
             <button onclick="loadSample('cheerful')" class="whitespace-nowrap px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition">元気・笑顔</button>
+            <button onclick="loadSample('angry')" class="whitespace-nowrap px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-red-400 transition">💢 激おこ</button>
             <button onclick="loadSample('sigh')" class="whitespace-nowrap px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition">ため息と安心</button>
             <button onclick="loadSample('whisper')" class="whitespace-nowrap px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition">ひそひそ話</button>
             <button onclick="loadSample('narration')" class="whitespace-nowrap px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition">解説・朗読</button>
@@ -288,10 +292,29 @@
         </div>
       </div>
 
-      <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-3.5 mb-5 text-xs text-slate-300 leading-relaxed">
+      <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-3.5 mb-4 text-xs text-slate-300 leading-relaxed">
         <i class="fa-solid fa-shield-halved text-emerald-400 mr-1.5"></i>
-        <strong>安全のための2ステップ録音:</strong><br>
-        GoogleのAI規定により、他人の声の無断複製を防ぐため、<strong>①あなたの声サンプル</strong>と<strong>②同意文の読み上げ</strong>の2つを録音します。
+        <strong>安全のための2ステップ録音 / 音声登録:</strong><br>
+        GoogleのAI規定により、他人の声の無断複製を防ぐため、<strong>①あなたの声サンプル</strong>と<strong>②同意文の読み上げ</strong>の2つを録音（またはファイル選択）します。
+      </div>
+
+      <!-- API Tier Notice -->
+      <div class="bg-indigo-950/30 border border-indigo-500/30 rounded-xl p-3 mb-4 text-[11px] text-indigo-200/90 leading-relaxed">
+        <div class="font-bold flex items-center gap-1.5 text-indigo-300 mb-1">
+          <i class="fa-solid fa-gem"></i>
+          Google APIの要件（Tier 1）について:
+        </div>
+        <p>Googleの仕様により、カスタム音声複製（Voice Replication）機能は Google AI Studio の<strong>「従量課金プラン（Paid Tier 1以上）」</strong>が設定されたAPIキーが必要です。無料枠（Free Tier）をご利用の場合は、標準ボイス（Puckなど）のTTS生成をお楽しみください。</p>
+      </div>
+
+      <!-- Mic Permission Troubleshooting Notice -->
+      <div class="bg-amber-950/20 border border-amber-500/30 rounded-xl p-3 mb-4 text-[11px] text-amber-200/90 leading-relaxed">
+        <div class="font-bold flex items-center gap-1.5 text-amber-300 mb-1">
+          <i class="fa-solid fa-circle-info"></i>
+          マイクエラー（Permission denied等）が出る場合:
+        </div>
+        <p>① URLバー左側の設定アイコン（鍵マーク等）からマイクを「許可」にし、再読み込み（F5）してください。<br>
+        ② または、各ステップの<strong>「ファイル選択」</strong>ボタンから直接音声ファイル（WAV/MP3/M4A等）をアップロードできます。</p>
       </div>
 
       <!-- Step 1: Reference Audio -->
@@ -307,12 +330,17 @@
           💡 <strong>読み上げテキスト例（普段の話し声で読んでください）:</strong><br>
           「こんにちは。今日はとても良い天気ですね。Geminiの最新の音声合成モデルを試しています。私の声がどのように再現されるのか、今からとても楽しみです。」
         </div>
-        <div class="flex items-center gap-3">
-          <button id="btnRecSource" onclick="toggleRecord('source')" class="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium flex items-center gap-2 transition">
+        <div class="flex flex-wrap items-center gap-2">
+          <button id="btnRecSource" onclick="toggleRecord('source')" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium flex items-center gap-1.5 transition">
             <i class="fa-solid fa-microphone text-xs"></i>
             <span>録音を開始</span>
           </button>
-          <audio id="sourceAudioPreview" controls class="h-8 flex-1 hidden"></audio>
+          <label class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium flex items-center gap-1.5 cursor-pointer transition border border-slate-700">
+            <i class="fa-solid fa-file-arrow-up text-xs text-indigo-400"></i>
+            <span>ファイル選択</span>
+            <input type="file" accept="audio/*" class="hidden" onchange="handleFileUpload(event, 'source')">
+          </label>
+          <audio id="sourceAudioPreview" controls class="h-8 flex-1 min-w-[150px] hidden"></audio>
           <span id="sourceStatus" class="text-xs text-slate-400">未録音</span>
         </div>
       </div>
@@ -330,12 +358,17 @@
           🎙️ <strong>マイクに向かって以下の文章をそのまま読み上げてください:</strong><br>
           <span class="text-white font-bold block mt-1">「私はこの音声の所有者であり、Google がこの音声を使用して合成音声モデルを作成することに同意します。」</span>
         </div>
-        <div class="flex items-center gap-3">
-          <button id="btnRecConsent" onclick="toggleRecord('consent')" class="px-3.5 py-1.5 rounded-lg bg-pink-600 hover:bg-pink-500 text-white text-xs font-medium flex items-center gap-2 transition">
+        <div class="flex flex-wrap items-center gap-2">
+          <button id="btnRecConsent" onclick="toggleRecord('consent')" class="px-3 py-1.5 rounded-lg bg-pink-600 hover:bg-pink-500 text-white text-xs font-medium flex items-center gap-1.5 transition">
             <i class="fa-solid fa-microphone text-xs"></i>
             <span>録音を開始</span>
           </button>
-          <audio id="consentAudioPreview" controls class="h-8 flex-1 hidden"></audio>
+          <label class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium flex items-center gap-1.5 cursor-pointer transition border border-slate-700">
+            <i class="fa-solid fa-file-arrow-up text-xs text-pink-400"></i>
+            <span>ファイル選択</span>
+            <input type="file" accept="audio/*" class="hidden" onchange="handleFileUpload(event, 'consent')">
+          </label>
+          <audio id="consentAudioPreview" controls class="h-8 flex-1 min-w-[150px] hidden"></audio>
           <span id="consentStatus" class="text-xs text-slate-400">未録音</span>
         </div>
       </div>
@@ -376,6 +409,7 @@
 
     const samples = {
       cheerful: "皆さん、こんにちは！<laugh>今日から新しいプロジェクトが始まります！</laugh> 一緒に最高の作品を作っていきましょうね！",
+      angry: "ちょっと待って！<angry>ふざけないでよ！話が全然違うじゃない！もう激おこなんだからね！プンプン！</angry>",
       sigh: "ふぅ…<sigh>やっと一息つけました。</sigh> 今日は本当に濃い一日でしたね。<laugh>でもすごく充実していました！</laugh>",
       whisper: "ねえ、ここだけの話なんだけど…<whisper>実はあっちの部屋に、とんでもない秘密があるみたいなんだ…</whisper>誰にも言わないでね？",
       narration: "星空を見上げると、無数の光が語りかけてくるようです。<short pause>古代の人々も、同じ星を見つめながら物語を紡ぎました。"
@@ -623,10 +657,25 @@
       recordingType = type;
       audioBuffers = [];
 
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert('お使いのブラウザはマイク録音に対応していないか、安全な通信環境ではありません。\n「ファイル選択」ボタンから手元の音声ファイル（WAV/MP3/M4A）をアップロードしてボイスを作成してください。');
+        return;
+      }
+
       try {
-        mediaStream = await navigator.mediaDevices.getUserMedia({ 
-          audio: { channelCount: 1, sampleRate: 24000, echoCancellation: true, noiseSuppression: true } 
-        });
+        let stream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ 
+            audio: { channelCount: 1, sampleRate: 24000, echoCancellation: true, noiseSuppression: true } 
+          });
+        } catch (constraintErr) {
+          // If strict constraints fail, fallback to default audio
+          if (constraintErr.name === 'NotAllowedError' || constraintErr.name === 'PermissionDeniedError' || constraintErr.message.includes('Permission denied')) {
+            throw constraintErr;
+          }
+          stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        }
+        mediaStream = stream;
 
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
         audioContext = new AudioContextClass({ sampleRate: 24000 });
@@ -671,7 +720,16 @@
         }, 500);
 
       } catch (err) {
-        alert('マイクの初期化に失敗しました: ' + err.message + '\nブラウザのマイク権限を許可してください。');
+        const guidance = 
+          '【マイクへのアクセスが拒否されました】\n' +
+          'エラー詳細: ' + (err.message || err.name) + '\n\n' +
+          '■ 解決手順 (Chrome / Edge):\n' +
+          '1. アドレスバー左側の「127.0.0.1:5000」の横にある設定アイコン（スライダーマークや鍵マーク、または🚫アイコン）をクリックしてください。\n' +
+          '2. 「マイク」の設定を【許可】（またはオン）に切り替えてください。\n' +
+          '3. ページを再読み込み（F5）してから、もう一度「録音を開始」を押してください。\n\n' +
+          '■ マイクを使わない場合:\n' +
+          '録音ボタンの横にある【ファイル選択】から、録音した音声ファイル（WAV/MP3/M4Aなど）を直接アップロードすることも可能です！';
+        alert(guidance);
       }
     }
 
@@ -762,13 +820,72 @@
       return new Blob([buffer], { type: 'audio/wav' });
     }
 
+    // Audio File Upload Handler
+    async function handleFileUpload(event, type) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      const statusEl = document.getElementById(type === 'source' ? 'sourceStatus' : 'consentStatus');
+      statusEl.textContent = '読み込み・変換中...';
+      statusEl.className = 'text-xs text-indigo-400 font-semibold';
+
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        const tempAudioCtx = new AudioContextClass({ sampleRate: 24000 });
+        const decodedBuffer = await tempAudioCtx.decodeAudioData(arrayBuffer);
+
+        // Mixdown to mono at 24000Hz
+        let channelData;
+        if (decodedBuffer.numberOfChannels === 1) {
+          channelData = decodedBuffer.getChannelData(0);
+        } else {
+          const ch0 = decodedBuffer.getChannelData(0);
+          const ch1 = decodedBuffer.getChannelData(1);
+          channelData = new Float32Array(ch0.length);
+          for (let i = 0; i < ch0.length; i++) {
+            channelData[i] = (ch0[i] + ch1[i]) / 2;
+          }
+        }
+
+        const sampleRate = tempAudioCtx.sampleRate || 24000;
+        const wavBlob = encodeWAV(channelData, sampleRate);
+        const audioUrl = URL.createObjectURL(wavBlob);
+
+        const preview = document.getElementById(type === 'source' ? 'sourceAudioPreview' : 'consentAudioPreview');
+        preview.src = audioUrl;
+        preview.classList.remove('hidden');
+
+        const durationSec = (channelData.length / sampleRate).toFixed(1);
+        statusEl.textContent = `読込完了 (${durationSec}秒: ${file.name})`;
+        statusEl.className = 'text-xs text-emerald-400 font-semibold';
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const b64 = reader.result.split(',')[1];
+          if (type === 'source') {
+            sourceWavB64 = b64;
+          } else {
+            consentWavB64 = b64;
+          }
+        };
+        reader.readAsDataURL(wavBlob);
+
+        tempAudioCtx.close();
+      } catch (err) {
+        statusEl.textContent = '読み込み失敗';
+        statusEl.className = 'text-xs text-rose-400 font-semibold';
+        alert('音声ファイルの読み込みに失敗しました: ' + err.message + '\n別のWAVやMP3ファイルを試してください。');
+      }
+    }
+
     async function submitReplicateVoice() {
       if (!sourceWavB64) {
-        alert('ステップ1の「あなたの声サンプル」を録音してください（10秒以上推奨）。');
+        alert('ステップ1の「あなたの声サンプル」を録音またはファイル選択してください（10秒以上推奨）。');
         return;
       }
       if (!consentWavB64) {
-        alert('ステップ2の「同意文の録音」を行ってください。');
+        alert('ステップ2の「同意文の録音」またはファイル選択を行ってください。');
         return;
       }
 

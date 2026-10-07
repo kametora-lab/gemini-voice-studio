@@ -7,6 +7,7 @@ from google import genai
 from google.genai import types
 
 app = Flask(__name__)
+app.config["TEMPLATES_AUTO_RELOAD"] = True
 
 # Base directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -28,10 +29,14 @@ def get_api_key():
 
 # Prebuilt voices metadata
 PREBUILT_VOICES = [
-    {"id": "Puck", "name": "Puck", "gender": "男性・中性", "tone": "元気・アップテンポ", "desc": "明るく活発なトーン。親しみやすい語りに最適", "is_custom": False},
-    {"id": "Charon", "name": "Charon", "gender": "男性", "tone": "落ち着いた低音", "desc": "重厚で深みのある知的な声。ニュースや解説風に", "is_custom": False},
+    {"id": "Iapetus", "name": "Iapetus", "gender": "男性 (20代)", "tone": "爽やか・明瞭・好青年", "desc": "ハキハキとした20代の爽やかな青年声。解説や案内、好印象なトークに最適", "is_custom": False},
+    {"id": "Achird", "name": "Achird", "gender": "男性 (20代)", "tone": "親しみ・温かみ・日常会話", "desc": "親しみやすく温かい20代の日常会話・Vlog風ボイス。友達感覚の語りかけに最適", "is_custom": False},
+    {"id": "Umbriel", "name": "Umbriel", "gender": "男性 (20代)", "tone": "リラックス・自然体", "desc": "落ち着いたトーンの20代青年声。ゆったりとしたレビューや雑談に最適", "is_custom": False},
+    {"id": "Sadachbia", "name": "Sadachbia", "gender": "男性 (20代)", "tone": "表情豊か・活気・アニメ調", "desc": "抑揚豊かで明るい20代の男性声。アニメキャラクターや楽しいトークに最適", "is_custom": False},
+    {"id": "Puck", "name": "Puck", "gender": "男性 (20代)", "tone": "元気・アップテンポ", "desc": "明るく活発なトーン。親しみやすい語りに最適", "is_custom": False},
+    {"id": "Charon", "name": "Charon", "gender": "男性 (低音)", "tone": "落ち着いた低音", "desc": "重厚で深みのある知的な声。ニュースや解説風に", "is_custom": False},
+    {"id": "Fenrir", "name": "Fenrir", "gender": "男性 (迫力)", "tone": "重厚・ダイナミック", "desc": "力強くエネルギッシュな声。ゲームや迫力ある場面に", "is_custom": False},
     {"id": "Aoede", "name": "Aoede", "gender": "女性", "tone": "上品・洗練・自然", "desc": "滑らかで透き通るような声。小説の朗読や案内音声に", "is_custom": False},
-    {"id": "Fenrir", "name": "Fenrir", "gender": "男性", "tone": "重厚・ダイナミック", "desc": "力強くエネルギッシュな声。ゲームや迫力ある場面に", "is_custom": False},
     {"id": "Kore", "name": "Kore", "gender": "女性", "tone": "明瞭・親しみやすい", "desc": "聞き取りやすく自然なトーン。日常会話やアシスタントに", "is_custom": False},
 ]
 
@@ -124,6 +129,11 @@ def replicate_voice():
 
     except Exception as e:
         error_msg = str(e)
+        if "Paid Quota Tier 1" in error_msg:
+            return jsonify({
+                "success": False, 
+                "error": "Google Gemini APIの仕様により、カスタム音声複製（Voice Replication）機能は「有料従量課金プラン（Tier 1以上）」のアカウントでのみご利用いただけます。\n\n無料枠（Free Tier）のAPIキーをご利用の場合は、標準ボイス（Puck, Charon, Kore, Fenrir, Aoede）による音声合成機能をお楽しみください。"
+            }), 403
         return jsonify({"success": False, "error": f"ボイス作成に失敗しました: {error_msg}"}), 500
 
 @app.route("/api/voices/<voice_id>", methods=["DELETE"])
